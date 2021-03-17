@@ -3,7 +3,7 @@ import Combine
 @testable import CombineFromClosure
 
 final class CombineFromClosureTests: XCTestCase {
-    func testFuture() {
+    func testFutureInitClosureWillDisappearAfterInit() {
         var object:NSObject? = NSObject()
         weak var theWeak = object
         XCTAssertNotNil(theWeak)
@@ -14,6 +14,29 @@ final class CombineFromClosureTests: XCTestCase {
         }
         object = nil
         XCTAssertNil(theWeak)
+    }
+
+    func testFutureCanNotRetry() {
+        var i = 0
+        var captured = [Capture<Int>]()
+        let binding = Future<Int, Error>{ promise in
+            guard  i > 2 else {
+                i += 1
+                promise(.failure(anyError()))
+                return
+            }
+            return promise(.success(i))
+        }.retry(3)
+        .sink { (completion) in
+            switch completion {
+            case .failure(let error): captured.append(.failure(error as NSError))
+            case .finished: captured.append(.finished)
+            }
+        } receiveValue: { (i) in
+            captured.append(.value(i))
+        }
+        XCTAssertEqual(captured, [.failure(anyError())])
+        binding.cancel()
     }
     
     func testClosurePublisher() {
@@ -39,14 +62,12 @@ final class CombineFromClosureTests: XCTestCase {
         
     }
     
-    func anyError() -> NSError {
-        NSError(domain: "test", code: 0)
-    }
-    static var allTests = [
-        ("testExample", testFuture),
-    ]
+   
 }
 
+func anyError() -> NSError {
+    NSError(domain: "test", code: 0)
+}
 
 enum Capture<Value:Equatable>:Equatable {
 

@@ -29,6 +29,7 @@ XCTAssertEqual(captured, [.failure(anyError())])
 ## With ClosurePublisher, it can retry
 
 ```swift
+var i = 0
 let binding = ClosurePublisher{ () throws -> Int in
     guard  i > 2 else {
         i += 1

@@ -62,7 +62,29 @@ final class CombineFromClosureTests: XCTestCase {
         
     }
     
-   
+    func testClosureInitClosureWillReleaseAfterCancel() {
+        var object:NSObject? = NSObject()
+        weak var theWeak = object
+        XCTAssertNotNil(theWeak)
+        
+        var publisher:ClosurePublisher<Int>? = ClosurePublisher<Int> {
+            [object] in
+            _ = object
+            return 1
+        }
+        object = nil
+        XCTAssertNotNil(theWeak)
+        let binding = publisher?.sink(receiveCompletion: { (_ ) in
+            
+        }, receiveValue: { (_) in
+            
+        })
+        publisher = nil
+        XCTAssertNotNil(theWeak)
+        binding?.cancel()
+        XCTAssertNil(theWeak)
+    }
+
 }
 
 func anyError() -> NSError {

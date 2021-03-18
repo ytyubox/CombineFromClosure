@@ -46,7 +46,6 @@ public struct ClosurePublisher<Output>:Publisher {
         }
         var playgroundDescription: Any { return description }
         
-        fileprivate typealias Parent = ClosurePublisher
         fileprivate init(
             _ parent: Parent,
             _ subscriber: Downstream)

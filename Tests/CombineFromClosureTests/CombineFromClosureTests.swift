@@ -85,6 +85,32 @@ final class CombineFromClosureTests: XCTestCase {
         XCTAssertNil(theWeak)
     }
 
+    func testDefer() {
+        var i = 0
+        var captured = [Capture<Int>]()
+        let binder =
+        Deferred {
+            Future<Int, Error>{ promise in
+                guard  i > 2 else {
+                    i += 1
+                    promise(.failure(anyError()))
+                    return
+                }
+                return promise(.success(i))
+            }
+        }
+        .retry(3)
+        .sink {
+            switch $0 {
+            case .failure(let error): captured.append(.failure(error as NSError))
+            case .finished: captured.append(.finished)
+            }
+        } receiveValue: { captured.append(.value($0))
+        }
+        XCTAssertEqual(captured, [.value(3), .finished])
+        
+        binder.cancel()
+    }
 }
 
 func anyError() -> NSError {
